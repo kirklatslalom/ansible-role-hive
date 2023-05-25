@@ -1,2 +1,49 @@
 ---
-# tasks file for ansible-role-hive
+# Install Hive
+- name: Create a directory if it does not exist
+  ansible.builtin.file:
+    path: /home/ubuntu/hive_software/apache-hive-3.1.3-bin/
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  become: true
+
+- name: Create software directory for Hive
+  ansible.builtin.file:
+    state: directory
+    path: "{{ hive_software_directory }}"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0744'
+
+- name: Create Hive workspace directory
+  ansible.builtin.file:
+    state: directory
+    path: "{{ hive_workspace_directory }}"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0744'
+
+- name: Ensure .bashrc file exists
+  ansible.builtin.copy:
+    content: ""
+    dest: /home/ubuntu/.bashrc
+    force: false
+    group: ubuntu
+    owner: ubuntu
+    mode: '0700'
+
+- name: Download Hive software and extract it to the specified Location
+  ansible.builtin.unarchive:
+    src: "{{ hive_software_download_url }}"
+    dest: "{{ hive_software_directory }}"
+    remote_src: true
+  become: true
+
+- name: Make Environmental Variables Permanent after reboot
+  ansible.builtin.blockinfile:
+    path: /home/ubuntu/.bashrc
+    content: |
+      export HIVE_HOME={{ hive_software_directory }}{{ hive_software_version }}/
+      export PATH={{ hive_software_directory }}{{ hive_software_version }}/bin/:$PATH
